@@ -1,7 +1,78 @@
-#include "server.h"
 #include <ev.h>
 #include <fcntl.h>
 #include "list.h"
+#include "server.h"
+#include "http_parser.h"
+
+static struct http_parser_settings parser_settings = {
+	.on_message_begin = 	null_cb,
+	.on_message_complete = 	null_cb,
+	.on_headers_complete = 	null_cb,
+	.on_header_field     = 	header_field_cb,
+	.on_header_value     = 	header_value_cb,
+	.on_url              = 	url_cb,
+	.on_body             = 	body_cb
+};
+
+static int null_cb(http_parser_t *parser)
+{
+	return 0;
+}
+
+static int header_field_cb(http_parser_t *parser, const char *buf, size_t len)
+{
+	struct http_request *request = (struct http_request*)parser->data;
+	struct http_header *header = add_http_header(request);
+	alloc_cpy(header->name, buff, len);
+	return 0;
+}
+
+static int header_value_cb(http_parser_t *parser, const char *buf, size_t len)
+{
+	struct http_request *request = (struct http_request*)parser->data;
+	struct http_header *header = request->header;
+	while(header->next != NULL){
+		header = header->next;
+	}
+	alloc_cpy(header->value, buf, len);
+	return 0;
+}
+
+int body_cb(http_parser *parser, const char *buf, size_t len) {
+    struct http_request *request = (struct http_request *) parser->data;
+    alloc_cpy(request->body, buf, len)
+    return 0;
+}
+
+int url_cb(http_parser *parser, const char *buf, size_t len) {
+    struct http_request *request = (struct http_request *) parser->data;
+    request->method = parser->method;
+    request->http_major = parser->http_major;
+    request->http_minor = parser->http_minor;
+    alloc_cpy(request->url, buf, len)
+    return 0;
+}
+
+
+static inline struct http_header *new_http_header()
+{
+	struct http_header *header = malloc(sizeof(struct http_header));
+	memset(header, 0, sizeof(struct http_header));
+}
+
+static inline struct http_header *add_http_header(struct http_request *request)
+{
+	struct http_header *header = request->header;
+	while(header != NULL){
+		if(header->next == NULL){
+			header->next = new_http_header();
+			return header->next;
+		}
+		header = header->next;
+	}
+	request->headers = new_http_header();
+	return request->header;
+}
 
 static inline int setnonblock(int fd)
 {
@@ -15,6 +86,13 @@ static inline int setnonblock(int fd)
 	return 0;
 }
 
+static inline struct http_request* new_http_request()
+{
+	struct http_request *request = malloc(sizeof(struct http_request));
+	memset(request, 0, sizeof(struct http_request));
+	return request;
+}
+
 void delete_http_request(struct http_request *request)
 {
 	
@@ -22,7 +100,11 @@ void delete_http_request(struct http_request *request)
 
 static struct http_request* parse_request(char *request_data, int len)
 {
-	return NULL;
+	http_parser_t *parser = malloc(sizeof(http_parser_t));
+	http_parser_init(parser, HTTP_REQUEST);
+	struct http_request *request = new_http_request();
+	request->data = request;
+	int ret = http_parser_excute(parser, &parser_settings, request_data, );
 }
 
 static void write_cb(struct ev_loop *loop, ev_io *w, int revents)

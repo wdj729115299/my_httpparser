@@ -5,6 +5,11 @@
 #include <ev.h>
 #include "list.h"
 
+#define alloc_cpy(dest, src, len) \
+    dest = malloc(len + 1);\
+    memcpy(dest, src, len);\
+    dest[len] = '\0';
+
 #define REQUEST_BUFFER_SIZE 2048
 
 struct http_header{
