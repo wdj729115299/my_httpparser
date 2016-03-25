@@ -104,7 +104,17 @@ static struct http_request* parse_request(char *request_data, int len)
 	http_parser_init(parser, HTTP_REQUEST);
 	struct http_request *request = new_http_request();
 	request->data = request;
-	int ret = http_parser_excute(parser, &parser_settings, request_data, );
+	int ret = http_parser_excute(parser, &parser_settings, request_data, len);
+	if(ret == len){
+		if(http_should_keep_alive(parser)){
+			request->flags |= F_HREQ_KEEPALIVE;
+		}
+		free(parser);
+		return request;
+	}
+	delete_http_request(request)
+	free(parser);
+	return NULL;
 }
 
 static void write_cb(struct ev_loop *loop, ev_io *w, int revents)
