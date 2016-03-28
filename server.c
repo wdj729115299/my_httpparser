@@ -98,6 +98,14 @@ void delete_http_request(struct http_request *request)
 	
 }
 
+size_t http_parser_excute(http_parser_t *parser, 
+						const http_parser_settings *settings, 
+						const char *data, 
+						size_t len)
+{
+	
+}
+
 static struct http_request* parse_request(char *request_data, int len)
 {
 	http_parser_t *parser = malloc(sizeof(http_parser_t));
