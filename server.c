@@ -179,7 +179,7 @@ reexecute:
 				SET_ERRNO(HPE_CLOSED_CONNECTION);
 			 	goto error;
 			case s_start_req_or_res:
-				if(ch == CR || ch == CF){
+				if(ch == CR || ch == CF)
 					break;
 				 parser->flags = 0;
         		 parser->content_length = ULLONG_MAX;
@@ -743,6 +743,8 @@ reexecute:
 		                  parser->header_state = h_general;
 		                  break;
 		              }
+		          }
+		        }
 		              break;
 			case s_header_value_discard_ws:
 				if (ch == ' ' || ch == '\t') break;
@@ -1293,15 +1295,9 @@ reexecute:
 				assert(0 && "unhandled state");
 		        SET_ERRNO(HPE_INVALID_INTERNAL_STATE);
 		        goto error;
-
-
-
-
-
-
-
      
 	}
+}
 }
 
 static struct http_request* parse_request(char *request_data, int len)
