@@ -1,6 +1,8 @@
 #ifndef _HTTP_PARSER_H
 #define _HTTP_PARSER_H
 
+#define CURRENT_STATE() p_state
+
 typedef struct http_parser{
 	/** PRIVATE **/
   unsigned int type : 2;         /* enum http_parser_type */
